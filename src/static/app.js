@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const categoryFilters = document.querySelectorAll(".category-filter");
   const dayFilters = document.querySelectorAll(".day-filter");
   const timeFilters = document.querySelectorAll(".time-filter");
+  const difficultyFilters = document.querySelectorAll(".difficulty-filter");
 
   // Authentication elements
   const loginButton = document.getElementById("login-button");
@@ -64,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
+  let currentDifficulty = "";
 
   // Authentication state
   let currentUser = null;
@@ -87,6 +89,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeTimeFilter = document.querySelector(".time-filter.active");
     if (activeTimeFilter) {
       currentTimeRange = activeTimeFilter.dataset.time;
+    }
+
+    // Initialize difficulty filter
+    const activeDifficultyFilter = document.querySelector(".difficulty-filter.active");
+    if (activeDifficultyFilter) {
+      currentDifficulty = activeDifficultyFilter.dataset.difficulty;
     }
   }
 
@@ -113,6 +121,22 @@ document.addEventListener("DOMContentLoaded", () => {
     // Update active class
     timeFilters.forEach((btn) => {
       if (btn.dataset.time === timeRange) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+
+    fetchActivities();
+  }
+
+  // Function to set difficulty filter
+  function setDifficultyFilter(difficulty) {
+    currentDifficulty = difficulty;
+
+    // Update active class
+    difficultyFilters.forEach((btn) => {
+      if (btn.dataset.difficulty === difficulty) {
         btn.classList.add("active");
       } else {
         btn.classList.remove("active");
@@ -416,6 +440,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
+      // Handle difficulty filter
+      if (currentDifficulty) {
+        queryParams.push(`difficulty_level=${encodeURIComponent(currentDifficulty)}`);
+      }
+
       const queryString =
         queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
       const response = await fetch(`/activities${queryString}`);
@@ -530,6 +559,13 @@ document.addEventListener("DOMContentLoaded", () => {
       </span>
     `;
 
+    // Create difficulty badge if difficulty level is specified
+    const difficultyBadge = details.difficulty_level ? `
+      <span class="difficulty-badge difficulty-${details.difficulty_level.toLowerCase()}">
+        ${details.difficulty_level}
+      </span>
+    ` : '';
+
     // Create capacity indicator
     const capacityIndicator = `
       <div class="capacity-container ${capacityStatusClass}">
@@ -545,6 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     activityCard.innerHTML = `
       ${tagHtml}
+      ${difficultyBadge}
       <h4>${name}</h4>
       <p>${details.description}</p>
       <p class="tooltip">
@@ -575,6 +612,12 @@ document.addEventListener("DOMContentLoaded", () => {
             )
             .join("")}
         </ul>
+      </div>
+      <div class="share-buttons">
+        <button class="share-button" data-activity="${name}" data-description="${details.description}" data-schedule="${formattedSchedule}" title="Share this activity">
+          <span class="share-icon">🔗</span>
+          <span class="share-text">Share</span>
+        </button>
       </div>
       <div class="activity-card-actions">
         ${
@@ -610,6 +653,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handler for share button
+    const shareButton = activityCard.querySelector(".share-button");
+    shareButton.addEventListener("click", handleShare);
 
     activitiesList.appendChild(activityCard);
   }
@@ -661,6 +708,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Update current time filter and fetch activities
       currentTimeRange = button.dataset.time;
+      fetchActivities();
+    });
+  });
+
+  // Add event listeners for difficulty filter buttons
+  difficultyFilters.forEach((button) => {
+    button.addEventListener("click", () => {
+      // Update active class
+      difficultyFilters.forEach((btn) => btn.classList.remove("active"));
+      button.classList.add("active");
+
+      // Update current difficulty filter and fetch activities
+      currentDifficulty = button.dataset.difficulty;
       fetchActivities();
     });
   });
@@ -879,10 +939,196 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Handle share button click
+  async function handleShare(event) {
+    const button = event.currentTarget;
+    const activityName = button.dataset.activity;
+    const description = button.dataset.description;
+    const schedule = button.dataset.schedule;
+
+    // Create share text
+    const shareTitle = `${activityName} - Mergington High School`;
+    const shareText = `Check out this activity: ${activityName}\n\n${description}\n\nSchedule: ${schedule}`;
+    const shareUrl = window.location.href;
+
+    // Try to use native Web Share API first (works on mobile and some modern browsers)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        showMessage("Activity shared successfully!", "success");
+        return;
+      } catch (error) {
+        // User cancelled or share failed, continue to fallback
+        if (error.name !== "AbortError") {
+          console.log("Share failed:", error);
+        }
+      }
+    }
+
+    // Fallback: Show share modal with options
+    showShareModal(activityName, description, schedule, shareUrl);
+  }
+
+  // Show share modal with multiple sharing options
+  function showShareModal(activityName, description, schedule, url) {
+    // Create share modal if it doesn't exist
+    let shareModal = document.getElementById("share-modal");
+    if (!shareModal) {
+      shareModal = document.createElement("div");
+      shareModal.id = "share-modal";
+      shareModal.className = "modal hidden";
+      shareModal.innerHTML = `
+        <div class="modal-content share-modal-content">
+          <span class="close-share-modal">&times;</span>
+          <h3>Share Activity</h3>
+          <div id="share-activity-name"></div>
+          <div class="share-options">
+            <button class="share-option-button facebook-share" id="facebook-share">
+              <span class="share-option-icon">📘</span>
+              <span>Facebook</span>
+            </button>
+            <button class="share-option-button twitter-share" id="twitter-share">
+              <span class="share-option-icon">🐦</span>
+              <span>Twitter</span>
+            </button>
+            <button class="share-option-button email-share" id="email-share">
+              <span class="share-option-icon">✉️</span>
+              <span>Email</span>
+            </button>
+            <button class="share-option-button copy-link" id="copy-link">
+              <span class="share-option-icon">📋</span>
+              <span>Copy Link</span>
+            </button>
+          </div>
+          <div id="share-message" class="hidden share-feedback"></div>
+        </div>
+      `;
+      document.body.appendChild(shareModal);
+
+      // Add close handler
+      const closeButton = shareModal.querySelector(".close-share-modal");
+      closeButton.addEventListener("click", closeShareModal);
+
+      // Close when clicking outside
+      shareModal.addEventListener("click", (event) => {
+        if (event.target === shareModal) {
+          closeShareModal();
+        }
+      });
+    }
+
+    // Update modal content
+    const activityNameEl = document.getElementById("share-activity-name");
+    activityNameEl.innerHTML = `<strong>${activityName}</strong><p class="share-description">${description}</p>`;
+
+    // Encode share content
+    const shareText = `Check out this activity: ${activityName} - ${description}. Schedule: ${schedule}`;
+    const encodedText = encodeURIComponent(shareText);
+    const encodedUrl = encodeURIComponent(url);
+    const encodedTitle = encodeURIComponent(activityName);
+
+    // Set up share buttons
+    const facebookButton = document.getElementById("facebook-share");
+    const twitterButton = document.getElementById("twitter-share");
+    const emailButton = document.getElementById("email-share");
+    const copyButton = document.getElementById("copy-link");
+
+    // Remove old event listeners by replacing elements
+    const newFacebookButton = facebookButton.cloneNode(true);
+    const newTwitterButton = twitterButton.cloneNode(true);
+    const newEmailButton = emailButton.cloneNode(true);
+    const newCopyButton = copyButton.cloneNode(true);
+
+    facebookButton.parentNode.replaceChild(newFacebookButton, facebookButton);
+    twitterButton.parentNode.replaceChild(newTwitterButton, twitterButton);
+    emailButton.parentNode.replaceChild(newEmailButton, emailButton);
+    copyButton.parentNode.replaceChild(newCopyButton, copyButton);
+
+    // Facebook share
+    newFacebookButton.addEventListener("click", () => {
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+        "_blank",
+        "width=600,height=400"
+      );
+    });
+
+    // Twitter share
+    newTwitterButton.addEventListener("click", () => {
+      window.open(
+        `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+        "_blank",
+        "width=600,height=400"
+      );
+    });
+
+    // Email share
+    newEmailButton.addEventListener("click", () => {
+      window.location.href = `mailto:?subject=${encodedTitle}&body=${encodedText}%0A%0A${encodedUrl}`;
+    });
+
+    // Copy link
+    newCopyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        showShareMessage("Link copied to clipboard!", "success");
+      } catch (error) {
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          showShareMessage("Link copied to clipboard!", "success");
+        } catch (err) {
+          showShareMessage("Failed to copy link", "error");
+        }
+        document.body.removeChild(textArea);
+      }
+    });
+
+    // Show modal
+    shareModal.classList.remove("hidden");
+    setTimeout(() => {
+      shareModal.classList.add("show");
+    }, 10);
+  }
+
+  // Show message in share modal
+  function showShareMessage(text, type) {
+    const shareMessage = document.getElementById("share-message");
+    shareMessage.textContent = text;
+    shareMessage.className = `share-feedback ${type}`;
+    shareMessage.classList.remove("hidden");
+
+    setTimeout(() => {
+      shareMessage.classList.add("hidden");
+    }, 3000);
+  }
+
+  // Close share modal
+  function closeShareModal() {
+    const shareModal = document.getElementById("share-modal");
+    if (shareModal) {
+      shareModal.classList.remove("show");
+      setTimeout(() => {
+        shareModal.classList.add("hidden");
+      }, 300);
+    }
+  }
+
   // Expose filter functions to window for future UI control
   window.activityFilters = {
     setDayFilter,
     setTimeRangeFilter,
+    setDifficultyFilter,
   };
 
   // Initialize app

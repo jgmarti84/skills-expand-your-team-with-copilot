@@ -239,6 +239,34 @@ section h3 {
   letter-spacing: 0.3px;
 }
 
+/* Difficulty Badge */
+.difficulty-badge {
+  position: absolute;
+  top: 28px;
+  right: 8px;
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.difficulty-beginner {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.difficulty-intermediate {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.difficulty-advanced {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
 /* Capacity Indicator */
 .capacity-container {
   margin: 8px 0;
@@ -573,7 +601,8 @@ footer {
 
 .category-filters,
 .day-filters,
-.time-filters {
+.time-filters,
+.difficulty-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -581,7 +610,8 @@ footer {
 
 .category-filter,
 .day-filter,
-.time-filter {
+.time-filter,
+.difficulty-filter {
   background-color: var(--background);
   border: 1px solid var(--border);
   color: var(--text-primary);
@@ -594,7 +624,8 @@ footer {
 
 .category-filter.active,
 .day-filter.active,
-.time-filter.active {
+.time-filter.active,
+.difficulty-filter.active {
   background-color: var(--primary);
   color: white;
   border-color: var(--primary-dark);
@@ -602,7 +633,8 @@ footer {
 
 .category-filter:hover,
 .day-filter:hover,
-.time-filter:hover {
+.time-filter:hover,
+.difficulty-filter:hover {
   background-color: var(--primary-light);
   color: white;
 }
@@ -729,4 +761,136 @@ footer {
     right: 10px;
     top: 55px;
   }
+/* Share buttons styles */
+.share-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+.share-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background-color: #e3f2fd;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-button:hover {
+  background-color: var(--primary-light);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.share-icon {
+  font-size: 0.9rem;
+}
+
+.share-text {
+  font-weight: 500;
+}
+
+/* Share modal styles */
+.share-modal-content {
+  max-width: 400px;
+}
+
+.share-modal-content h3 {
+  color: var(--primary);
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+#share-activity-name {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: var(--background);
+  border-radius: 5px;
+  text-align: center;
+}
+
+#share-activity-name strong {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.share-description {
+  margin-top: 5px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.share-option-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  gap: 8px;
+}
+
+.share-option-button:hover {
+  background-color: var(--background);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.share-option-icon {
+  font-size: 1.8rem;
+}
+
+.share-feedback {
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+.share-feedback.success {
+  background-color: var(--success-light);
+  color: var(--success);
+}
+
+.share-feedback.error {
+  background-color: var(--error-light);
+  color: var(--error);
+}
+
+.close-share-modal {
+  position: absolute;
+  right: 12px;
+  top: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.close-share-modal:hover {
+  color: var(--text-primary);
 }
