@@ -679,7 +679,7 @@ footer {
   align-items: center;
   gap: 5px;
   padding: 5px 12px;
-  background-color: var(--background);
+  background-color: #e3f2fd;
   border: 1px solid var(--border);
   color: var(--text-primary);
   border-radius: 20px;
